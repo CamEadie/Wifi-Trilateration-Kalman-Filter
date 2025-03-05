@@ -1,0 +1,11 @@
+{
+    "name": "wifi-env",
+    "dockerFile": "..\\Dockerfile",
+    "runArgs": [
+    "--privileged",
+    "--network=host",
+    "--cap-add=NET_ADMIN",
+    "--cap-add=SYS_ADMIN",
+    "--device=/dev/net/tun"
+  ]
+}

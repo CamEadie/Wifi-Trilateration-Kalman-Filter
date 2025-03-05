@@ -1,0 +1,4 @@
+from kf_simulation import simulate_kalman_filter_1d, simulate_kalman_filter_2d
+import subprocess
+
+simulate_kalman_filter_1d()
