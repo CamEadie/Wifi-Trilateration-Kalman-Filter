@@ -13,3 +13,9 @@ If you have installed new packages while the virtual environment is active, to u
 
 ## Run the Tests
 * `python -m pytest .`
+
+## Run in Linux
+* Requires linux with access to WiFi network so bare-metal install (like booting from a CD) not WSL or Docker
+* Run Dockerfile
+  * `sudo docker build -t wifi-container .`
+  * `sudo docker run --rm -i --network host --privileged wifi-container`
