@@ -5,12 +5,12 @@ import os
 from scapy.all import sniff, Dot11Beacon, Dot11ProbeReq
 
 def packet_callback(packet):
-    if (packet.haslayer(Dot11Beacon) or packet.haslayer(Dot11ProbeReq)) and (packet.dBm_AntSignal is not None and hasattr(packet, "info")):
-        # Extract Signal Strength (RSSI)
+    print("sniff")
+    if (packet.haslayer(Dot11Beacon) or packet.haslayer(Dot11ProbeReq)) and (packet.dBm_AntSignal is not None and packet.info is not None):
         rssi = packet.dBm_AntSignal
         ssid = packet.info
         mac = packet.addr2
-        
+
         packetType = "Beacon" if packet.haslayer(Dot11Beacon) else "Probe"
         macType = "Access Point" if packet.haslayer(Dot11Beacon) else "Device"
 
