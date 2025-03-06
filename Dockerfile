@@ -7,23 +7,19 @@ ENV DEBIAN_FRONTEND=noninteractive
 USER root
 
 RUN apt-get update
-RUN apt-get install -y aircrack-ng libpcap-dev iproute2 net-tools
-RUN apt-get install -y pciutils
-RUN apt-get install -y sudo
-
-# Copy the requirements file into the image
-COPY ./requirements.txt /app/requirements.txt
+RUN apt-get install -y aircrack-ng libpcap-dev iproute2 net-tools pciutils sudo
 
 # Set the working directory to /app
 WORKDIR /app
 
-# Install any needed packages specified in requirements.txt
-RUN pip3 install -r requirements.txt
-RUN pip3 install scapy
-
-# Copy every content from the local folder to the image
+# Copy the content from the local folder to the image
 COPY . .
 
+# Install any needed packages specified in requirements.txt
+RUN pip3 install virtualenv && \
+    python3 -m virtualenv --python=python3.11 venv && \
+    source ./venv/bin/activate && \
+    pip3 install -r requirements.txt
+
 # Run main script
-#CMD ["/bin/bash"]
 CMD [ "sudo", "python3", "-u", "/app/main.py" ]

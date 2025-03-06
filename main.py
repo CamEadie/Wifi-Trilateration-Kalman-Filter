@@ -2,30 +2,24 @@
 #simulate_kalman_filter_1d()
 
 import os
-from scapy.all import sniff, Dot11
+from scapy.all import sniff, Dot11Beacon, Dot11ProbeReq
 
 def packet_callback(packet):
-    if packet.haslayer(Dot11):
+    if (packet.haslayer(Dot11Beacon) or packet.haslayer(Dot11ProbeReq)) and (packet.dBm_AntSignal is not None and hasattr(packet, "info")):
         # Extract Signal Strength (RSSI)
-        rssi = packet.dBm_AntSignal if packet.dBm_AntSignal is not None else "N/A"
+        rssi = packet.dBm_AntSignal
+        ssid = packet.info
+        mac = packet.addr2
+        
+        packetType = "Beacon" if packet.haslayer(Dot11Beacon) else "Probe"
+        macType = "Access Point" if packet.haslayer(Dot11Beacon) else "Device"
 
-        ssid = packet.info.decode() if packet.info else "Hidden SSID"
-        mac = packet[Dot11].addr2 if packet[Dot11] else "No MAC"
+        print(f"{packetType} Frame: SSID: {ssid} dBm, RSSI: {rssi}, {macType}: {mac}")
 
-        # Check Beacon frames (WiFi Routers advertising)
-        if packet.type == 0 and packet.subtype == 8:
-            print(f"Beacon Frame: SSID: {ssid} dBm, RSSI: {rssi}, Access Point: {mac}")
-        # Check Probe frames (Devices looking for WiFi Routers)
-        elif packet.type == 0 and packet.subtype == 4:
-            print(f"Probe Frame: SSID: {ssid} dBm, RSSI: {rssi}, Device: {mac}")
-
-def start_sniffing(interface="wlan0mon"):
+def start_sniffing(interface):
     print(f"Sniffing on interface {interface}...")
     sniff(iface=interface, prn=packet_callback, store=0)
 
 if __name__ == "__main__":
-    interface = "wlp3s0"
-    monitor_interface = "mon1"
-    #os.system(f"airmon-ng start {interface}")
-    start_sniffing(monitor_interface)
+    start_sniffing("mon0")
 
