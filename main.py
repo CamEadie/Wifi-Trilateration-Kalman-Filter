@@ -15,13 +15,12 @@ def get_wifi_info(interface):
         print(f"Error: {result.stderr}")
         return
 
-    # The output is a long text, so we use regex to find Tx Power and Frequency for each AP
-    print(f"Output: {result.stdout}")
+    # Use regex to find Frequency for each AP
     scan_data = result.stdout
     networks = []
 
     # Regex pattern to extract information
-    ap_pattern = r"BSS ([0-9a-f:]+).*?freq: (\d+).*?signal: (-?\d+) dBm.*?SSID: *(.+)"
+    ap_pattern = r"(?s)BSS ([0-9a-f:]+).*?freq: (\d+).*?signal: (-?\d+.\d+) dBm.*?SSID: *([^\r\n]*\S)"
 
     matches = re.findall(ap_pattern, scan_data, re.DOTALL)
 
@@ -50,7 +49,6 @@ if __name__ == "__main__":
         print(f"SSID: {network['SSID']}")
         print(f"Frequency: {network['Frequency']} GHz")
         print(f"Signal Level (RSSI): {network['Signal Level (RSSI)']} dBm")
-        print(f"Tx Power: {network['Tx Power']} dBm")
         print("-" * 30)
 
     start_sniffing(wifi_monitor_interface)
