@@ -1,24 +1,51 @@
-#from kf_simulation import simulate_kalman_filter_1d, simulate_kalman_filter_2d
-#simulate_kalman_filter_1d()
+#from wifi_sniffer import start_sniffing
+#from kf_simulation import simulate_kalman_filter_1d, simulate_kalman_filter_2d, simulate_static_wifi_2d, simulate_kalman_filter_live_2d
+import subprocess
+import re
 
-from scapy.all import sniff, Dot11Beacon, Dot11ProbeReq, Dot11ProbeResp
+def get_wifi_info(interface):
+    # Run the iwlist command to scan for networks
+    result = subprocess.run(['iwlist', interface, 'scan'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
-def packet_callback(packet):
-    rssi = getattr(packet, "dBm_AntSignal", "N/A")  # Handle missing RSSI
-    ssid = getattr(packet, "info", b"Hidden SSID").decode(errors="ignore")  # Handle missing SSID
-    sender = packet.addr2
-    receiver = packet.addr1
+    if result.returncode != 0:
+        print(f"Error: {result.stderr}")
+        return
 
-    if packet.haslayer(Dot11Beacon) or packet.haslayer(Dot11ProbeReq) or packet.haslayer(Dot11ProbeResp):
-        packetType = "Beacon   " if packet.haslayer(Dot11Beacon) else "ProbeReq " if packet.haslayer(Dot11ProbeReq) else "ProbeResp"
-        print(f"[{packetType}]: RSSI: {rssi} dBm, Sender: {sender}, Receiver: {receiver}, SSID: {ssid}")
-    else:
-        print(f"[Other    ]: RSSI: {rssi} dBm, Sender: {sender}, Receiver: {receiver}, SSID: {ssid}")
+    # The output is a long text, so we use regex to find Tx Power and Frequency for each AP
+    scan_data = result.stdout
+    networks = []
+    
+    # Regex pattern to extract information
+    ap_pattern = r"Cell \d+ - Address: ([0-9A-F:]+).*?ESSID:\"([^\"]+)\".*?Frequency:(\d+\.\d+) GHz.*?Signal level=(-?\d+) dBm.*?Tx-Power=(\d+) dBm"
+    
+    matches = re.findall(ap_pattern, scan_data, re.DOTALL)
 
-def start_sniffing(interface):
-    print(f"Sniffing on interface {interface}...")
-    sniff(iface=interface, prn=packet_callback, store=0, monitor=True)
+    for match in matches:
+        ap_info = {
+            'MAC Address': match[0],
+            'SSID': match[1],
+            'Frequency': match[2],  # Frequency in GHz
+            'Signal Level (RSSI)': match[3],  # RSSI in dBm
+            'Tx Power': match[4]  # Tx Power in dBm
+        }
+        networks.append(ap_info)
+
+    return networks
 
 if __name__ == "__main__":
-    start_sniffing("mon0")
+    #start_sniffing("mon0")
+    # simulate_kalman_filter_1d()
+    # simulate_kalman_filter_2d()
+    # simulate_static_wifi_2d()
+    # simulate_kalman_filter_live_2d()
 
+    wifi_networks = get_wifi_info("mon0")
+
+    # Print out the retrieved information
+    for network in wifi_networks:
+        print(f"MAC Address: {network['MAC Address']}")
+        print(f"SSID: {network['SSID']}")
+        print(f"Frequency: {network['Frequency']} GHz")
+        print(f"Signal Level (RSSI): {network['Signal Level (RSSI)']} dBm")
+        print(f"Tx Power: {network['Tx Power']} dBm")
+        print("-" * 30)

@@ -43,6 +43,7 @@ pywin32-ctypes==0.2.2
 requests==2.31.0
 s3transfer==0.8.2
 scapy==2.6.1
+scipy==1.15.2
 six==1.17.0
 stack-data==0.6.3
 traitlets==5.14.3

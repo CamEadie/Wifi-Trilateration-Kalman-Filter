@@ -7,7 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 USER root
 
 RUN apt-get update
-RUN apt-get install -y aircrack-ng libpcap-dev iproute2 net-tools pciutils sudo
+RUN apt-get install -y libpcap-dev iproute2 net-tools pciutils sudo
 
 # Set the working directory to /app
 WORKDIR /app
@@ -16,7 +16,7 @@ WORKDIR /app
 COPY ./requirements.txt ./requirements.txt
 
 # Install any needed packages specified in requirements.txt
-RUN pip3 install -r requirements.txt
+RUN pip3 install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org -r requirements.txt
 
 # Copy the content from the local folder to the image
 COPY . .

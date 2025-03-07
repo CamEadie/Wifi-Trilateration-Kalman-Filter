@@ -141,7 +141,7 @@ class KalmanFilter2D(BaseKalmanFilter):
     def H(self) -> np.ndarray:
         H = super().H()
         H[self.iX, self.iX] = 1
-        H[self.iX, self.iX] = 1
+        H[self.iY, self.iY] = 1
         return H
 
     @property
