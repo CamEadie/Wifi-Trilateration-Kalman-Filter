@@ -8,8 +8,8 @@ wifi_monitor_interface = 'mon0'
 
 def get_wifi_info(interface):
     # Run the iwlist command to scan for networks
-    print(f"Running 'iwlist {interface} scan' subprocess")
-    result = subprocess.run(['iwlist', interface, 'scan'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    print(f"Running 'iw dev {interface} scan' subprocess")
+    result = subprocess.run(['iw', 'dev', interface, 'scan'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
     if result.returncode != 0:
         print(f"Error: {result.stderr}")
@@ -19,19 +19,18 @@ def get_wifi_info(interface):
     print(f"Output: {result.stdout}")
     scan_data = result.stdout
     networks = []
-    
+
     # Regex pattern to extract information
-    ap_pattern = r"Cell \d+ - Address: ([0-9A-F:]+).*?ESSID:\"([^\"]+)\".*?Frequency:(\d+\.\d+) GHz.*?Signal level=(-?\d+) dBm.*?Tx-Power=(\d+) dBm"
-    
+    ap_pattern = r"BSS ([0-9a-f:]+).*?freq: (\d+).*?signal: (-?\d+) dBm.*?SSID: *(.+)"
+
     matches = re.findall(ap_pattern, scan_data, re.DOTALL)
 
     for match in matches:
         ap_info = {
             'MAC Address': match[0],
-            'SSID': match[1],
-            'Frequency': match[2],  # Frequency in GHz
-            'Signal Level (RSSI)': match[3],  # RSSI in dBm
-            'Tx Power': match[4]  # Tx Power in dBm
+            'Frequency': match[1], # Frequency in MHz
+            'Signal Level (RSSI)': match[2],  # RSSI in dBm
+            'SSID': match[3]
         }
         networks.append(ap_info)
 

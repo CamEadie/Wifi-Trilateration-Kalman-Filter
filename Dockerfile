@@ -7,7 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 USER root
 
 RUN apt-get update && \
-    apt-get install -y libpcap-dev iproute2 net-tools pciutils sudo wireless-tools
+    apt-get install -y libpcap-dev iproute2 net-tools pciutils sudo iw
 
 # Set the working directory to /app
 WORKDIR /app
