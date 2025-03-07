@@ -31,6 +31,18 @@ Requires Linux with access to WiFi network so bare-metal install (like booting f
   * `sudo ip link set <interface> up`
 * Clone the code to the Linux machine
   * `git clone ...` (clone the repo to the machine from git)
+
+BSS 84:af:ec:7b:f5:9c(on wlp3s0)
+	last seen: 104814.626s [boottime]
+	TSF: 6846246709612 usec (79d, 05:44:06)
+	freq: 5320
+	beacon interval: 100 TUs
+	capability: ESS Privacy ShortPreamble SpectrumMgmt (0x0131)
+	signal: -47.00 dBm
+	last seen: 12 ms ago
+	Information elements from Probe Response frame:
+	SSID: SORANOZAWA
+	Supported rates: 6.0* 9.0 12.0* 18.0 24.0* 36.0 48.0 54.0 
   * `cd Wifi-Trilateration-Kalman-Filter` (enter the repo folder)
 * Run the Dockerfile
   * `sudo docker build -t wifi-container .`
