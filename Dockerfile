@@ -6,8 +6,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 USER root
 
-RUN apt-get update
-RUN apt-get install -y libpcap-dev iproute2 net-tools pciutils sudo
+RUN apt-get update && \
+    apt-get install -y libpcap-dev iproute2 net-tools pciutils sudo wireless-tools
 
 # Set the working directory to /app
 WORKDIR /app
@@ -23,3 +23,6 @@ COPY . .
 
 # Run main script
 CMD [ "sudo", "python3", "-u", "/app/main.py" ]
+
+# Useful for debugging in the container
+#CMD [ "/bin/bash" ]
