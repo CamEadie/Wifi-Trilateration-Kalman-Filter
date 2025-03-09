@@ -2,19 +2,24 @@ from scapy.all import sniff, Dot11Beacon, Dot11ProbeReq, Dot11ProbeResp
 import subprocess
 import re
 from datetime import datetime, timedelta
+import os
+import time
+from threading import Thread
 
 class WifiSniffer:
-    def __init__(self):
+    def __init__(self, interface, monitor_interface):
         self.routers = {}
+        self.interface = interface
+        self.monitor_interface = monitor_interface
     
     @property
     def routers(self) -> dict:
         return self.routers
     
-    def get_wifi_info(self, interface):
+    def get_wifi_info(self):
         # Run the iwlist command to scan for networks
-        print(f"Running 'iw dev {interface} scan' subprocess")
-        result = subprocess.run(['iw', 'dev', interface, 'scan'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        print(f"Running 'iw dev {self.interface} scan' subprocess")
+        result = subprocess.run(['iw', 'dev', self.interface, 'scan'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
         if result.returncode != 0:
             print(f"Error: {result.stderr}")
@@ -42,6 +47,16 @@ class WifiSniffer:
             print(f"[Lookup   ]: RSSI: {match[2]} dBm, Sender: {match[0]}, SSID: {match[3]}")
         print(f"{'-'*10} Lookup Complete {'-'*10}")
         return networks
+    
+    def channel_hopper(self):
+        channels_2g = list(range(1, 14))
+        channels_5g = [64]#list(range(36, 65, 4)) + list(range(100, 141, 4)) + list(range(149, 166, 4))
+        channels = channels_2g + channels_5g
+
+        while True:
+            for channel in channels:
+                os.system(f"iw dev {self.interface} set channel {channel}")
+                time.sleep(0.1)
 
     def packet_callback(self, packet):
         rssi = packet.dBm_AntSignal
@@ -68,4 +83,5 @@ class WifiSniffer:
 
     def start_sniffing(self, interface):
         print(f"Sniffing on interface {interface}...")
+        Thread(target=self.channel_hopper, daemon=True).start()
         sniff(iface=interface, prn=self.packet_callback, store=0, monitor=True)
