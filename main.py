@@ -2,7 +2,7 @@ from kf_simulation import simulate_kalman_filter_1d, simulate_kalman_filter_2d, 
 from wifi_sniffer import WifiSniffer
 
 wifi_interface = 'wlp3s0'
-wifi_monitor_interface = 'mon0'
+wifi_monitor_interface = wifi_interface #'mon0'
 simulate = False
 
 if __name__ == "__main__":
