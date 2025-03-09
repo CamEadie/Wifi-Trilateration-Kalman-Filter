@@ -35,6 +35,8 @@ For the docker image to have access to the WiFi network interface it needs to be
   * `sudo iw dev <interface> set monitor none`
   * `sudo ip link set <interface> up`
 * Clone the code to the Linux machine
+  * `ssh-keygen -t ed25519 -C "<comment to identify the SSH key>"`
+  * Add the SSH .pub key to Git
   * `git clone ...` (clone the repo to the machine from git)
   * `cd Wifi-Trilateration-Kalman-Filter` (enter the repo folder)
 * Run the Dockerfile
