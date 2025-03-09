@@ -38,7 +38,7 @@ class WifiSniffer:
             ap_info = {
                 'MAC Address': match[0],
                 'Frequency': int(match[1]), # Frequency in MHz
-                'Signal Level (RSSI)': int(match[2]),  # RSSI in dBm
+                'Signal Level (RSSI)': float(match[2]),  # RSSI in dBm
                 'SSID': match[3],
                 'Last Updated': datetime.now()
             }
@@ -68,7 +68,7 @@ class WifiSniffer:
             case _ if packet.haslayer(Dot11Beacon):
                 packetType = "Beacon   "
                 if ssid != "Hidden SSID" and sender in self._routers.keys():
-                    self._routers[sender]['Signal Level (RSSI)'] = rssi
+                    self._routers[sender]['Signal Level (RSSI)'] = float(rssi)
                     self._routers[sender]['SSID'] = ssid
                     self._routers[sender]['Last Updated'] = datetime.now()
             case _ if packet.haslayer(Dot11ProbeReq):
