@@ -12,6 +12,6 @@ if __name__ == "__main__":
         # simulate_static_wifi_2d()
         simulate_kalman_filter_live_2d()
     else:
-        sniffer = WifiSniffer()
-        sniffer.get_wifi_info(wifi_interface)
-        sniffer.start_sniffing(wifi_monitor_interface)
+        sniffer = WifiSniffer(wifi_interface, wifi_monitor_interface)
+        sniffer.get_wifi_info()
+        sniffer.start_sniffing()

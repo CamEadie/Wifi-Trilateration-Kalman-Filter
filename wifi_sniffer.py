@@ -81,7 +81,8 @@ class WifiSniffer:
         if packetType != "Other    ":
             print(f"[{packetType}]: RSSI: {rssi} dBm, Sender: {sender}, Receiver: {receiver}, SSID: {ssid}")
 
-    def start_sniffing(self, interface):
-        print(f"Sniffing on interface {interface}...")
+    def start_sniffing(self):
+        print("Starting channel hopper...")
         Thread(target=self.channel_hopper, daemon=True).start()
-        sniff(iface=interface, prn=self.packet_callback, store=0, monitor=True)
+        print(f"Sniffing on interface {self.monitor_interface}...")
+        sniff(iface=self.monitor_interface, prn=self.packet_callback, store=0, monitor=True)
