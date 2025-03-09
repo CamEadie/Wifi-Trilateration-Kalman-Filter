@@ -8,13 +8,13 @@ from threading import Thread
 
 class WifiSniffer:
     def __init__(self, interface, monitor_interface):
-        self.routers = {}
+        self._routers = {}
         self.interface = interface
         self.monitor_interface = monitor_interface
     
     @property
     def routers(self) -> dict:
-        return self.routers
+        return self._routers
     
     def get_wifi_info(self):
         # Run the iwlist command to scan for networks
@@ -42,7 +42,7 @@ class WifiSniffer:
                 'SSID': match[3],
                 'Last Updated': datetime.now()
             }
-            self.routers[match[0]] = ap_info
+            self._routers[match[0]] = ap_info
             networks.append(ap_info)
             print(f"[Lookup   ]: RSSI: {match[2]} dBm, Sender: {match[0]}, SSID: {match[3]}")
         print(f"{'-'*10} Lookup Complete {'-'*10}")
@@ -67,10 +67,10 @@ class WifiSniffer:
         match packet:
             case _ if packet.haslayer(Dot11Beacon):
                 packetType = "Beacon   "
-                if ssid != "Hidden SSID" and sender in self.routers.keys():
-                    self.routers[sender]['Signal Level (RSSI)'] = rssi
-                    self.routers[sender]['SSID'] = ssid
-                    self.routers[sender]['Last Updated'] = datetime.now()
+                if ssid != "Hidden SSID" and sender in self._routers.keys():
+                    self._routers[sender]['Signal Level (RSSI)'] = rssi
+                    self._routers[sender]['SSID'] = ssid
+                    self._routers[sender]['Last Updated'] = datetime.now()
             case _ if packet.haslayer(Dot11ProbeReq):
                 packetType = "ProbeReq "
             case _ if packet.haslayer(Dot11ProbeResp):
