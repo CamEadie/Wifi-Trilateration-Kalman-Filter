@@ -310,6 +310,6 @@ def simulate_kalman_filter_live_2d():
     plt.title('Live Kalman Filter 2D Tracking')
     
     # Save as GIF
-    ani.save("simulations/simulate_kalman_filter_live_2d.gif", writer="pillow", fps=10)
+    # ani.save("simulations/simulate_kalman_filter_live_2d.gif", writer="pillow", fps=10)
 
     plt.show()
