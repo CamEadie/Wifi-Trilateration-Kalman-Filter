@@ -14,7 +14,7 @@ class BaseKalmanFilter(ABC):
         self._x = np.zeros(self._state_dims)
 
         # Covariance of state of GRV
-        self._P = np.eye(self._state_dims)
+        self._P = np.eye(self._state_dims) * 100
 
         self._acceleration_variance = acceleration_variance
 
