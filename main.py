@@ -135,5 +135,5 @@ if __name__ == "__main__":
         
         # Save data to CSV
         df = pd.DataFrame(data_log)
-        df.to_csv("wifi_tracking_log.csv", index=False)
+        df.to_csv(f"live_data/wifi_tracking_log_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv", index=False)
         print("Data saved to wifi_tracking_log.csv")

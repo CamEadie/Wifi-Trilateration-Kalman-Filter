@@ -76,4 +76,4 @@ For the docker image to have access to the WiFi network interface it needs to be
   * `cd Wifi-Trilateration-Kalman-Filter` (enter the repo folder)
 * Run the Dockerfile
   * `sudo docker build -t wifi-container .`
-  * `sudo docker run --rm -i --network host --privileged wifi-container`
+  * `sudo docker run --rm -i --network host --privileged -v ./live_data:/app/live_data wifi-container`
