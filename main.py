@@ -79,7 +79,7 @@ def trilaterate(access_points, access_point_known_positions):
     ])
 
     # Measurement noise covariance (assuming small Gaussian noise on RSSI-derived distances)
-    sigma_rssi = 2  # Estimated RSSI noise in dBm
+    sigma_rssi = 10  # Estimated RSSI noise in dBm
     distance_noise = (np.log(10) / (10 * PATH_LOSS_EXPONENT)) * distances * sigma_rssi
     R = np.diag(distance_noise ** 2)
 
@@ -135,5 +135,6 @@ if __name__ == "__main__":
         
         # Save data to CSV
         df = pd.DataFrame(data_log)
-        df.to_csv(f"live_data/wifi_tracking_log_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv", index=False)
-        print("Data saved to wifi_tracking_log.csv")
+        csv_label = f"wifi_tracking_log_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv"
+        df.to_csv(f"live_data/{csv_label}", index=False)
+        print(f"Data saved to {csv_label}")

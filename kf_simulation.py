@@ -1,6 +1,11 @@
+from datetime import datetime
+import math
+
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 import matplotlib.animation as animation
+import pandas as pd
 from scipy.stats import multivariate_normal
 
 from kf import KalmanFilter1D, KalmanFilter2D
@@ -200,12 +205,12 @@ def simulate_static_wifi_2d():
     heatmap = ax.imshow(distribution, extent=(min_x, max_x, min_y, max_y), origin='lower', cmap='plasma', alpha=0.7)
     plt.colorbar(heatmap, label='Probability Density')
 
-    # Mark and label 3 WiFi Routers
-    routers = [(5, 5, 'WiFi 1'), 
-               (10, 35, 'WiFi 2'), 
-               (45, 10, 'WiFi 3')]
-    for rx, ry, label in routers:
-        plot_router(ax, rx, ry, label_space_x, label_space_y, label)   
+    # Mark and label 3 WiFi Routers    
+    routers = [([5, 5], 'WiFi 1'), 
+               ([10, 35], 'WiFi 2'), 
+               ([45, 10], 'WiFi 3')]
+    for pos, label in routers:
+        plot_router(ax, pos[0], pos[1], label_space_x, label_space_y, label)
 
     ax.set_xlabel('X Position')
     ax.set_ylabel('Y Position')
@@ -237,13 +242,13 @@ def simulate_kalman_filter_live_2d():
     real_y = 10.0
     real_v_x = 0.5
     real_v_y = 0.5
-    meas_variance = np.array([[0.5, 0.05], [0.05, 0.5]])
 
     kf = KalmanFilter2D(initial_x=x, initial_y=y, initial_v_x=v_x, initial_v_y=v_y, acceleration_variance=a)
 
     DT = 0.1
     NUM_STEPS = 1000
     MEAS_EVERY_STEPS = 10
+    PATH_LOSS_EXPONENT = 3  # Typical values range from 2 to 4
 
     label_space_x = (max_x - min_x) / 100.0
     label_space_y = (max_y - min_y) / 100.0
@@ -252,19 +257,27 @@ def simulate_kalman_filter_live_2d():
 
     device_scatter, device_text, device_distribution = plot_device(ax, x, y, kf.cov[:2, :2], space, label_space_x, label_space_y, "Cam Phone")
     
+    data_log = []
+
     router_scatters = []
     router_texts = []
+    router_circles = []
     # Plot static WiFi routers
-    routers = [(5, 5, 'WiFi 1'), 
-               (10, 35, 'WiFi 2'), 
-               (45, 10, 'WiFi 3')]
-    for rx, ry, label in routers:
-        router_scatter, router_text = plot_router(ax, rx, ry, label_space_x, label_space_y, label)
+    routers = [([5, 5], 'WiFi 1'), 
+               ([10, 35], 'WiFi 2'), 
+               ([45, 10], 'WiFi 3')]
+    for pos, label in routers:
+        router_scatter, router_text = plot_router(ax, pos[0], pos[1], label_space_x, label_space_y, label)
         router_scatters.append(router_scatter)
         router_texts.append(router_text)
+        router_circle = patches.Circle((pos[0], pos[1]), radius=0, color='red', fill=False)
+        ax.add_patch(router_circle)
+        router_circles.append(router_circle)
 
     heatmap = ax.imshow(device_distribution, extent=(min_x, max_x, min_y, max_y), origin='lower', cmap='plasma', alpha=0.7)
     plt.colorbar(heatmap, label='Probability Density')
+
+    distances = {label: 0 for _, label in routers}
 
     def update(frame):
         nonlocal real_x, real_y, real_v_x, real_v_y
@@ -283,12 +296,44 @@ def simulate_kalman_filter_live_2d():
         # Kalman filter prediction and update
         kf.predict(dt=DT)
         if frame != 0 and frame % MEAS_EVERY_STEPS == 0:
-            kf.update(meas_value=[
-                real_x + np.random.default_rng().standard_normal() * np.sqrt(meas_variance[0, 0]),
-                real_y + np.random.default_rng().standard_normal() * np.sqrt(meas_variance[1, 1])
-            ], meas_variance=meas_variance)
+            real_position = np.array([real_x, real_y])
 
-        
+            positions = [np.array(router[0]) for router in routers]
+            noisy_distances = [math.hypot(*(real_position - router[0])) + np.random.default_rng().standard_normal() for router in routers]
+
+            for circle, distance, router in zip(router_circles, noisy_distances, routers):
+                circle.set_radius(distance)
+                distances[router[1]] = distance
+
+            positions = np.array(positions)
+            noisy_distances = np.array(noisy_distances)
+
+            # Constructing A and b for least squares Ax = b
+            A = -2 * (positions[:-1] - positions[-1])
+            b = noisy_distances[:-1]**2 - noisy_distances[-1]**2 + np.sum(positions[-1]**2) - np.sum(positions[:-1]**2, axis=1)
+            
+            # Least squares solution - considered scipy.optimize.least_squares but this is faster for a linear solution
+            estimated_position = np.linalg.lstsq(A, b, rcond=None)[0]
+
+            # Compute Jacobian
+            J = np.array([
+                [2 * (estimated_position[0] - x), 2 * (estimated_position[1] - y)]
+                for x, y in positions
+            ])
+
+            # Measurement noise covariance (assuming small Gaussian noise on RSSI-derived distances)
+            sigma_rssi = 10  # Estimated RSSI noise in dBm
+            distance_noise = (np.log(10) / (10 * PATH_LOSS_EXPONENT)) * noisy_distances * sigma_rssi
+            R = np.diag(distance_noise ** 2)
+
+            J_inv = np.linalg.pinv(J.T @ J) @ J.T  # Pseudo-inverse of J for stability
+            cov = J_inv @ R @ J_inv.T
+            
+            kf.update(meas_value=[
+                estimated_position[0],
+                estimated_position[1]
+            ], meas_variance=cov * 10) # x10 so it's easier to see for the demo's sake
+
         # Update the device's scatter position
         device_scatter.set_offsets([[kf.mean[0], kf.mean[1]]])
 
@@ -299,11 +344,14 @@ def simulate_kalman_filter_live_2d():
         distribution = multivariate_normal(mean=[kf.mean[0], kf.mean[1]], cov=kf.cov[:2, :2]).pdf(space)
         distribution /= distribution.max()
         heatmap.set_array(distribution)
+        
+        # Log data
+        log_entry = {"timestamp": frame, "x": kf.pos_x, "y": kf.pos_y, **distances}
+        data_log.append(log_entry)
 
-        return *router_scatters, *router_texts, device_scatter, device_text, heatmap
+        return *router_scatters, *router_texts, device_scatter, device_text, *router_circles, heatmap
 
-    # DT * 100 instead of DT * 1000 so we cover the 100s of motion in 10s of animation
-    ani = animation.FuncAnimation(fig, update, frames=NUM_STEPS, interval=DT * 100, blit=True)
+    ani = animation.FuncAnimation(fig, update, frames=NUM_STEPS, interval=DT, blit=False, repeat=False)
 
     plt.xlabel('X Position')
     plt.ylabel('Y Position')
@@ -311,5 +359,12 @@ def simulate_kalman_filter_live_2d():
     
     # Save as GIF
     # ani.save("simulations/simulate_kalman_filter_live_2d.gif", writer="pillow", fps=10)
-
+    
     plt.show()
+
+    # Save data to CSV
+    df = pd.DataFrame(data_log)
+    csv_label = "wifi_tracking_log_simulated.csv"
+    df.to_csv(f"live_data/{csv_label}", index=False)
+    print(f"Data saved to {csv_label}")
+    
